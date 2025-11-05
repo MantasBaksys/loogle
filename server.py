@@ -181,14 +181,14 @@ class MyHandler(prometheus_client.MetricsHandler):
         except BrokenPipeError:
             pass
 
-    def returnIcon(self):
+    def returnPNG(self, data):
         self.send_response(200)
         self.send_header("Content-type", "image/png")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "User-Agent, X-Loogle-Client")
         self.end_headers()
         try:
-            self.wfile.write(icon)
+            self.wfile.write(data)
         except BrokenPipeError:
             pass
 
@@ -268,7 +268,10 @@ class MyHandler(prometheus_client.MetricsHandler):
             want_json = False
 
             if url.path == "/loogle.png":
-               self.returnIcon()
+               self.returnPNG(icon)
+               return
+            if url.path == "/loogle-banner.png":
+               self.returnPNG(banner)
                return
             if url.path == "/json":
                 want_json = True
@@ -366,7 +369,21 @@ class MyHandler(prometheus_client.MetricsHandler):
                     span.copy { cursor: pointer; }
                 </style>
                 <link rel="icon" type="image/png" href="loogle.png" />
+                <meta name="twitter:card" content="summary_large_image">
+                <meta name="twitter:title" content="Loogle - Search Lean and Mathlib">
+                <meta name="twitter:description" content="Loogle is a search tool for finding definitions, theorems, and lemmas in Lean 4 and Mathlib.">
+                <meta name="twitter:image" content="https://loogle.lean-lang.org/loogle-banner.png">
+                
+                <meta property="og:title" content="Loogle - Search Lean and Mathlib">
+                <meta property="og:description" content="Loogle is a search tool for finding definitions, theorems, and lemmas in Lean 4 and Mathlib.">
+                <meta property="og:image" content="https://loogle.lean-lang.org/loogle-banner.png">
+                <meta property="og:url" content="https://loogle.lean-lang.org/">
+
                 <title>Loogle!</title>
+            """, "utf-8"))
+            self.wfile.write(bytes(os.environ.get('LOOGLE_HEAD',""),"utf-8"))
+            self.wfile.write(bytes(f"""
+                </head>
                 <body autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                 <main class="container">
 
@@ -377,7 +394,7 @@ class MyHandler(prometheus_client.MetricsHandler):
                 <form method="GET" id="queryform">
                 <div class="grouped">
                 <input id="hiddenquery" type="hidden" name="q" value=""/>
-                <div class="textinput" id="query" name="q" contenteditable="true" autofocus="true">{html.escape(query)}</div>
+                <div class="textinput" id="query" name="q" contenteditable="true" autofocus="true" autocorrect="false">{html.escape(query)}</div>
                 <button type="submit" id="submit">#find</button>
                 <button type="submit" name="lucky" value="yes" title="Directly jump to the documentation of the first hit.">#lucky</button>
                 </div>
